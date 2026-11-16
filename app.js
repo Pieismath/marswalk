@@ -150,7 +150,7 @@ const hhmm = (h) => `${String(Math.floor(h)).padStart(2,'0')}:${String(Math.floo
 
 // ---------- three.js scene ----------
 const container = $('scene');
-const renderer = new THREE.WebGLRenderer({ antialias: true, logarithmicDepthBuffer: true }); // metres-to-100-km zoom range
+const renderer = new THREE.WebGLRenderer({ antialias: true, logarithmicDepthBuffer: true, preserveDrawingBuffer: true }); // metres-to-100-km zoom range
 renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
 renderer.setSize(innerWidth, innerHeight);
 renderer.outputColorSpace = THREE.SRGBColorSpace;
