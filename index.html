@@ -31,7 +31,12 @@
   .tb:hover { border-color:rgba(255,255,255,.4); }
 
   /* left: layers */
-  #left { position:fixed; top:68px; left:16px; width:250px; z-index:5; padding:14px 14px 10px; border-radius:4px; }
+  #left { position:fixed; top:68px; left:16px; width:250px; z-index:5; padding:14px 14px 10px; border-radius:4px; display:none; }
+  body.layers-open #left { display:block; } body.layers-open #layersBtn { display:none; }
+  #layersBtn { position:fixed; top:68px; left:16px; z-index:5; padding:9px 14px; border-radius:4px; }
+  #kv tr.more { display:none; } #kv.all tr.more { display:table-row; }
+  #moreBtn { margin-top:6px; font-size:11.5px; color:#9aa0a6; text-decoration:underline; text-underline-offset:3px; }
+  #readout { display:none; } body.layers-open #readout { display:block; }
   .layer { display:flex; align-items:center; gap:10px; padding:7px 2px; border-top:1px solid rgba(255,255,255,.06); cursor:pointer; user-select:none; }
   .layer:first-of-type { border-top:0; }
   .layer .sw { width:14px; height:14px; border:1px solid rgba(255,255,255,.4); border-radius:2px; flex:none; display:grid; place-items:center; }
@@ -111,7 +116,7 @@
   #about .box { width:min(780px,92vw); max-height:86vh; overflow:auto; padding:24px 28px; border-radius:4px; }
   #about h2 { font-size:10.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--dim); margin:18px 0 6px; } #about h2:first-child { margin-top:0; }
   #about li { margin:5px 0; color:#c9cdd1; } #about li b { color:#fff; } #about a { color:#fff; }
-  .video #left, .video #readout, .video #compass, .video #right details, .video #right .acts, .video #top .ro button, .video #top .title, .video #hint { display:none !important; }
+  .video #left, .video #layersBtn, .video #moreBtn, .video #readout, .video #compass, .video #right details, .video #right .acts, .video #top .ro button, .video #top .title, .video #hint { display:none !important; }
   .video #kv tr:nth-child(n+4) { display:none; }
   .video #right { width:360px; } .video #tl .live { display:none; }
   .hl { outline:3px solid #fc3d21 !important; outline-offset:4px; transition:outline .3s; }
@@ -154,8 +159,9 @@
   </div>
 </header>
 
+<button id="layersBtn" class="tb panel">Layers &amp; ground truth</button>
 <aside id="left" class="panel">
-  <div class="lab">Layers</div>
+  <div class="lab" style="display:flex;justify-content:space-between">Layers <button id="layersClose" style="color:#9aa0a6">✕</button></div>
   <div style="margin-top:8px" id="layers">
     <div class="layer on" data-l="imagery"><span class="sw"></span><span class="nm">Orbital imagery<small>CTX 6 m · Viking color</small></span></div>
     <div class="layer" data-l="elev"><span class="sw"></span><span class="nm">Elevation &amp; contours<small>CTX DTM · HRSC-MOLA · 50 m contours</small></span></div>
@@ -180,7 +186,7 @@
     <div id="result" style="display:none">
       <div class="verdict"><span class="dot" id="vdot"></span><b id="verdict"></b></div>
       <div class="why" id="why"></div>
-      <table class="kv" id="kv"></table>
+      <table class="kv" id="kv"></table><button id="moreBtn">Show all details</button>
       <canvas id="profile" width="600" height="160"></canvas>
       <div class="acts"><button class="tb" id="fly">Walk the route</button><button class="tb danger" id="runStorm">Run storm scenario</button></div>
       <div class="acts"><button class="tb" id="crewBtn">Zoom to crew</button><button class="tb" id="roverBtn">Zoom to rover</button></div>
@@ -249,6 +255,6 @@
   <div style="margin-top:16px"><button class="tb" id="closeAbout">Close</button></div>
 </div></div>
 
-<script type="module" src="app.js?v=60"></script>
+<script type="module" src="app.js?v=61"></script>
 </body>
 </html>

@@ -520,7 +520,7 @@ function render() {
   $('vdot').style.background = ['var(--ok)', 'var(--warn)', 'var(--bad)'][level];
   $('verdict').textContent = ['GO', 'GO · CAUTION', 'NO-GO'][level];
   $('why').textContent = reasons.length ? reasons.join(' · ').replace(/^./, c => c.toUpperCase()) + '.' : 'All checks pass.';
-  const rad = (P.totalH / 24) * RAD_MSV_PER_DAY, row = (k, v) => `<tr><td>${k}</td><td>${v}</td></tr>`;
+  let rowN = 0; const rad = (P.totalH / 24) * RAD_MSV_PER_DAY, row = (k, v) => `<tr${++rowN > 3 ? ' class="more"' : ''}><td>${k}</td><td>${v}</td></tr>`;
   $('kv').innerHTML = row('Outbound / return', `${fmt(P.so.dist / 1000, 2)} / ${fmt(P.sb.dist / 1000, 2)} km`) +
     row('Suit time (incl. science)', `${fmt(P.totalH)} of ${fmt(S.eva)} h`) + row('Climb out / back', `${fmt(P.so.gain, 0)} / ${fmt(P.sb.gain, 0)} m`) +
     row('Max slope on route', `${fmt(Math.max(P.so.maxSl, P.sb.maxSl))}° (limit ${S.maxSlope}°)`) + row('Walking energy', `${fmt((P.so.energy + P.sb.energy) / 1000, 0)} kJ/kg`) +
@@ -654,6 +654,9 @@ $('aboutBtn').onclick = () => $('about').classList.add('show');
 $('closeAbout').onclick = () => $('about').classList.remove('show');
 $('about').onclick = (e) => { if (e.target === $('about')) $('about').classList.remove('show'); };
 $('homeBtn').onclick = () => { anim = null; flyHome(); };
+$('layersBtn').onclick = () => document.body.classList.add('layers-open');
+$('layersClose').onclick = () => document.body.classList.remove('layers-open');
+$('moreBtn').onclick = () => { const k = $('kv').classList.toggle('all'); $('moreBtn').textContent = k ? 'Show fewer details' : 'Show all details'; };
 $('crewBtn').onclick = () => { controls.autoRotate = false; const p = astro.position.clone(); const from = { p: camera.position.clone(), t: controls.target.clone() };
   anim = { kind: 'fly', t0: performance.now(), dur: 2200, from, to: { p: p.clone().add(new THREE.Vector3(0.05, 0.025, 0.07)), t: p.clone().add(new THREE.Vector3(0, 0.009, 0)) } }; };
 $('roverBtn').onclick = () => { controls.autoRotate = false; const p = rover3d.position.clone(); const from = { p: camera.position.clone(), t: controls.target.clone() };
