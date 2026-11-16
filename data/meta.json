@@ -1,0 +1,13 @@
+{
+ "width": 532,
+ "height": 504,
+ "cell_m": 60.0,
+ "lon_min": 77.16046545922367,
+ "lat_max": 18.721194481872804,
+ "lon_max": 77.69897516629472,
+ "lat_min": 18.211027390963398,
+ "z_min": -2710.51416015625,
+ "z_max": -1516.7027587890625,
+ "source_dtm": "USGS Astrogeology / NASA Mars 2020 TRN: JEZ_ctx_B_soc_008_DTM_MOLAtopography_DeltaGeoid_20m (CTX stereo DTM, 20 m/px)",
+ "source_img": "USGS Astrogeology / NASA Mars 2020 TRN: JEZ_ctx_B_soc_008_orthoMosaic_6m (CTX orthomosaic, 6 m/px)"
+}

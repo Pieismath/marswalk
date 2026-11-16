@@ -1,0 +1,248 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Marswalk · Jezero EVA Planner</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root { --ink:#fff; --dim:#9aa0a6; --mute:#5f6368; --line:rgba(255,255,255,.12); --panel:rgba(5,6,8,.78);
+          --red:#fc3d21; --ok:#2ecc71; --warn:#f7c948; --bad:#fc3d21; --route:#3fd5ff; --trav:#ffffff; }
+  * { box-sizing:border-box; }
+  html,body { margin:0; height:100%; background:#000; color:var(--ink); font:13px/1.45 Inter,system-ui,sans-serif; overflow:hidden; -webkit-font-smoothing:antialiased; }
+  #scene { position:fixed; inset:0; }
+  button { font:inherit; color:inherit; background:none; border:0; cursor:pointer; padding:0; }
+  .mono { font-family:"DM Mono",ui-monospace,monospace; }
+  .lab { font-size:10.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--dim); font-weight:600; }
+  .panel { background:var(--panel); border:1px solid var(--line); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); }
+
+  /* top bar */
+  #top { position:fixed; top:0; left:0; right:0; height:52px; z-index:6; display:flex; align-items:center; gap:22px; padding:0 20px;
+         background:linear-gradient(180deg,rgba(0,0,0,.85),rgba(0,0,0,.55)); border-bottom:1px solid var(--line); }
+  #top .logo { font-weight:800; letter-spacing:.22em; font-size:14px; }
+  #top .logo i { font-style:normal; color:var(--red); }
+  #top .sep { width:1px; height:22px; background:var(--line); }
+  #top .title { color:var(--dim); font-size:12.5px; }
+  #top .ro { display:flex; gap:22px; margin-left:auto; align-items:center; }
+  #top .ro div { text-align:right; } #top .ro b { display:block; font-family:"DM Mono",monospace; font-weight:500; font-size:13px; color:var(--ink); }
+  #top .ro span { font-size:9.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--dim); }
+  .tb { padding:7px 12px; border:1px solid var(--line); border-radius:3px; font-size:12px; font-weight:600; }
+  .tb:hover { border-color:rgba(255,255,255,.4); }
+
+  /* left: layers */
+  #left { position:fixed; top:68px; left:16px; width:250px; z-index:5; padding:14px 14px 10px; border-radius:4px; }
+  .layer { display:flex; align-items:center; gap:10px; padding:7px 2px; border-top:1px solid rgba(255,255,255,.06); cursor:pointer; user-select:none; }
+  .layer:first-of-type { border-top:0; }
+  .layer .sw { width:14px; height:14px; border:1px solid rgba(255,255,255,.4); border-radius:2px; flex:none; display:grid; place-items:center; }
+  .layer.on .sw { background:var(--ink); border-color:var(--ink); }
+  .layer.on .sw::after { content:""; width:6px; height:6px; background:#000; }
+  .layer .nm { flex:1; } .layer .nm small { display:block; color:var(--mute); font-size:10.5px; }
+  .layer .key { width:22px; height:3px; border-radius:2px; flex:none; }
+  #legend { margin:8px 0 2px; display:none; } #legend.show { display:block; }
+  #legend .bar { height:8px; border-radius:1px; background:linear-gradient(90deg,#1b2a8c,#1f78c8,#26b5a0,#7ccd4f,#f3d94c,#f08a2e,#d63c2c,#fff); }
+  #legend .ends { display:flex; justify-content:space-between; color:var(--dim); font-size:10.5px; margin-top:3px; }
+  #gt { margin-top:12px; border-top:1px solid var(--line); padding-top:12px; }
+  #gt button { display:block; width:100%; position:relative; margin-top:8px; }
+  #gt img { width:100%; height:110px; object-fit:cover; display:block; border-radius:2px; filter:saturate(.9); }
+  #gt .cap { color:var(--dim); font-size:10.5px; margin-top:5px; text-align:left; }
+
+  /* right: mission */
+  #right { position:fixed; top:68px; right:16px; width:330px; z-index:5; border-radius:4px; max-height:calc(100vh - 210px); overflow-y:auto; }
+  #right .sec { padding:14px 16px; border-top:1px solid var(--line); } #right .sec:first-child { border-top:0; }
+  #hint p { margin:8px 0 0; color:var(--dim); }
+  .tb.primary { background:#fff; color:#000; border-color:#fff; }
+  .verdict { display:flex; align-items:center; gap:10px; margin-top:6px; }
+  .verdict .dot { width:12px; height:12px; border-radius:50%; }
+  .verdict b { font-size:26px; font-weight:800; letter-spacing:-.02em; }
+  .why { color:var(--dim); margin-top:6px; font-size:12.5px; }
+  table.kv { width:100%; border-collapse:collapse; margin-top:4px; }
+  table.kv td { padding:5px 0; border-top:1px solid rgba(255,255,255,.06); font-size:12.5px; }
+  table.kv td:first-child { color:var(--dim); } table.kv td:last-child { text-align:right; font-family:"DM Mono",monospace; }
+  #profile { width:100%; height:80px; display:block; margin-top:8px; }
+  .acts { display:flex; gap:8px; margin-top:12px; } .acts .tb { flex:1; padding:9px 0; text-align:center; }
+  .tb.danger { border-color:rgba(252,61,33,.7); color:#ff8a76; }
+  details summary { cursor:pointer; list-style:none; } details summary::-webkit-details-marker { display:none; }
+  details summary::after { content:"+"; float:right; color:var(--dim); } details[open] summary::after { content:"–"; }
+  .rg { display:flex; justify-content:space-between; color:var(--dim); font-size:12px; margin-top:10px; } .rg b { color:var(--ink); font-family:"DM Mono",monospace; font-weight:500; }
+  input[type=range] { width:100%; accent-color:#fff; margin:4px 0 0; }
+  .chk { display:flex; gap:8px; align-items:center; color:var(--dim); font-size:12px; margin-top:10px; }
+
+  /* bottom: CME timeline */
+  #tl { position:fixed; left:16px; right:16px; bottom:16px; height:118px; z-index:5; border-radius:4px; padding:10px 14px 8px; }
+  #tl .hd { display:flex; align-items:baseline; gap:12px; }
+  #tl .hd .sub { color:var(--mute); font-size:11px; }
+  #tl .hd .live { margin-left:auto; font-size:11px; color:var(--dim); text-decoration:underline; text-underline-offset:3px; }
+  #tlc { width:100%; height:78px; display:block; cursor:crosshair; }
+  #tip { position:fixed; z-index:9; pointer-events:none; padding:6px 9px; font-size:11.5px; display:none; border-radius:3px; }
+
+  /* readout + scale */
+  #readout { position:fixed; right:16px; bottom:148px; z-index:5; text-align:right; font-family:"DM Mono",monospace; font-size:11.5px; color:var(--dim); text-shadow:0 1px 3px #000; }
+  #scale { display:inline-block; margin-top:6px; border:1px solid #fff; border-top:0; height:6px; }
+  #compass { position:fixed; right:356px; top:72px; z-index:5; width:40px; height:40px; }
+
+  /* labels */
+  #labels { position:fixed; inset:0; pointer-events:none; z-index:4; }
+  .pl { position:absolute; transform:translate(-50%,-100%); white-space:nowrap; text-align:center; }
+  .pl .t { font-size:11px; font-weight:600; letter-spacing:.06em; padding:2px 6px; background:rgba(0,0,0,.55); border-left:2px solid #fff; text-align:left; }
+  .pl .t small { display:block; font-weight:400; color:var(--dim); font-family:"DM Mono",monospace; letter-spacing:0; }
+  .pl .stem { width:1px; height:22px; background:rgba(255,255,255,.7); margin:0 auto; }
+  .pl.big .t { font-size:13px; letter-spacing:.2em; text-transform:uppercase; border:0; background:none; text-shadow:0 1px 6px #000; }
+  .pl.big .stem { display:none; }
+  .pl.far .t small { display:none; }
+
+  /* storm */
+  #banner { position:fixed; top:64px; left:50%; transform:translateX(-50%); z-index:6; padding:9px 16px; background:rgba(120,10,0,.85); border:1px solid var(--red);
+            font-weight:600; display:none; max-width:560px; text-align:center; border-radius:3px; font-size:12.5px; }
+  #banner.show { display:block; animation:pulse 1.4s infinite; }
+  @keyframes pulse { 50% { box-shadow:0 0 50px rgba(252,61,33,.7); } }
+  #vignette { position:fixed; inset:0; pointer-events:none; z-index:3; opacity:0; transition:opacity .8s; background:radial-gradient(ellipse at center, transparent 50%, rgba(170,10,0,.55)); }
+  #vignette.show { opacity:1; }
+  #toast { position:fixed; left:50%; top:110px; transform:translateX(-50%); z-index:8; padding:8px 14px; font-size:12px; display:none; border-radius:3px; }
+  #toast.show { display:block; }
+
+  /* lightbox + about */
+  .modal { position:fixed; inset:0; z-index:20; background:rgba(0,0,0,.86); display:none; align-items:center; justify-content:center; padding:4vh 4vw; }
+  .modal.show { display:flex; }
+  #lb .card { display:flex; gap:28px; align-items:center; max-width:1200px; width:100%; }
+  #lb img { flex:1.6; min-width:0; max-height:80vh; object-fit:contain; background:#000; }
+  #lb .txt { flex:1; } #lb h3 { margin:6px 0 10px; font-size:20px; }
+  #lb .nav { display:flex; gap:8px; margin-top:16px; }
+  #about .box { width:min(780px,92vw); max-height:86vh; overflow:auto; padding:24px 28px; border-radius:4px; }
+  #about h2 { font-size:10.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--dim); margin:18px 0 6px; } #about h2:first-child { margin-top:0; }
+  #about li { margin:5px 0; color:#c9cdd1; } #about li b { color:#fff; } #about a { color:#fff; }
+  #loading { position:fixed; inset:0; display:grid; place-items:center; z-index:30; background:#000; letter-spacing:.3em; font-weight:800; font-size:13px; }
+  #loading i { font-style:normal; color:var(--red); }
+  .clean #top, .clean #left, .clean #right, .clean #tl, .clean #readout, .clean #compass { display:none !important; }
+
+  @media (max-width:900px) {
+    #left { display:none; } #top .title, #top .ro div:nth-child(n+3) { display:none; }
+    #right { left:12px; right:12px; width:auto; top:auto; bottom:146px; max-height:45vh; } #readout, #compass { display:none; }
+    #tl { left:12px; right:12px; bottom:12px; }
+  }
+</style>
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+} }
+</script>
+</head>
+<body>
+<div id="loading">MARS<i>WALK</i></div>
+<div id="scene"></div>
+<div id="labels"></div>
+<div id="vignette"></div>
+<div id="banner"></div>
+
+<header id="top">
+  <div class="logo">MARS<i>WALK</i></div>
+  <div class="sep"></div>
+  <div class="title">EVA planner · Jezero Crater, Mars · 18.4°N 77.5°E</div>
+  <div class="ro">
+    <div><b id="roLmst">--:--</b><span>Local solar time</span></div>
+    <div><b id="roSol">----</b><span>Perseverance sol</span></div>
+    <div><b id="roCme">---</b><span>CMEs toward Mars</span></div>
+    <button class="tb" id="homeBtn">Reset view</button>
+    <button class="tb" id="aboutBtn">Data &amp; methods</button>
+  </div>
+</header>
+
+<aside id="left" class="panel">
+  <div class="lab">Layers</div>
+  <div style="margin-top:8px" id="layers">
+    <div class="layer on" data-l="imagery"><span class="sw"></span><span class="nm">Orbital imagery<small>CTX 6 m · Viking color</small></span></div>
+    <div class="layer" data-l="elev"><span class="sw"></span><span class="nm">Elevation &amp; contours<small>CTX DTM · HRSC-MOLA · 50 m contours</small></span></div>
+    <div class="layer" data-l="slope"><span class="sw"></span><span class="nm">Slope hazard<small>steeper than the crew limit</small></span><span class="key" style="background:#fc3d21"></span></div>
+    <div class="layer on" data-l="trav"><span class="sw"></span><span class="nm">Perseverance traverse<small id="travSub">sol 0 – 2022 · 45.3 km</small></span><span class="key" style="background:#fff"></span></div>
+    <div class="layer on" data-l="labels"><span class="sw"></span><span class="nm">Place names</span></div>
+  </div>
+  <div id="legend"><div class="bar"></div><div class="ends mono"><span>−3,200 m</span><span>floor −2,600</span><span>−1,200 m</span></div></div>
+  <div id="gt">
+    <div class="lab">Ground truth</div>
+    <button id="thRover"><img id="gtImg" src="assets/perseverance-sol2-navcam.jpg" alt="Perseverance Navcam image"><div class="cap" id="gtCap">Perseverance Navcam · sol 2 · at the habitat site</div></button>
+  </div>
+</aside>
+
+<aside id="right" class="panel">
+  <div class="sec">
+    <div class="lab">EVA plan</div>
+    <div id="hint">
+      <p>Click a point inside the crater to plan a walk from the habitat at Perseverance's landing site.</p>
+      <div class="acts"><button class="tb primary" id="demoTarget">Plan to the river delta</button></div>
+    </div>
+    <div id="result" style="display:none">
+      <div class="verdict"><span class="dot" id="vdot"></span><b id="verdict"></b></div>
+      <div class="why" id="why"></div>
+      <table class="kv" id="kv"></table>
+      <canvas id="profile" width="600" height="160"></canvas>
+      <div class="acts"><button class="tb" id="fly">Walk the route</button><button class="tb danger" id="runStorm">Run storm scenario</button></div>
+      <div class="acts"><button class="tb" id="crewBtn">Zoom to crew</button><button class="tb" id="roverBtn">Zoom to rover</button></div>
+    </div>
+  </div>
+  <details class="sec">
+    <summary class="lab">Mission parameters</summary>
+    <div class="rg">Max slope <b id="vSlope">15°</b></div><input type="range" id="slope" min="8" max="25" step="1" value="15">
+    <div class="rg">Suit time limit <b id="vEva">7.0 h</b></div><input type="range" id="eva" min="3" max="9" step="0.5" value="7">
+    <div class="rg">Science time at target <b id="vSci">1.50 h</b></div><input type="range" id="sci" min="0" max="4" step="0.25" value="1.5">
+    <div class="rg">Crew sleep last night <b id="vSleep">6.5 h</b></div><input type="range" id="sleep" min="3" max="9" step="0.5" value="6.5">
+    <div class="rg">Hours awake before EVA <b id="vAwake">3.0 h</b></div><input type="range" id="awake" min="0" max="12" step="0.5" value="3">
+    <label class="chk"><input type="checkbox" id="slam"> Schedule shifted in last 48 h</label>
+    <div class="rg">Storm arrives into the walk <b id="vLead">3.0 h</b></div><input type="range" id="lead" min="0" max="8" step="0.25" value="3">
+  </details>
+</aside>
+
+<svg id="compass" viewBox="0 0 40 40"><circle cx="20" cy="20" r="18" fill="rgba(0,0,0,.55)" stroke="rgba(255,255,255,.3)"/><g id="needle"><path d="M20 5 L24 20 L20 18 L16 20 Z" fill="#fc3d21"/><path d="M20 35 L24 20 L20 22 L16 20 Z" fill="rgba(255,255,255,.6)"/></g></svg>
+
+<div id="readout"><div id="roCursor">move over the terrain</div><div><span id="scale"></span> <span id="scaleTxt"></span></div></div>
+
+<section id="tl" class="panel">
+  <div class="hd"><span class="lab">Space weather</span><span class="sub" id="tlSub">Coronal mass ejections predicted to reach Mars · NASA CCMC DONKI · WSA-ENLIL</span><button class="live" id="liveDonki">Refresh live from NASA DONKI</button></div>
+  <canvas id="tlc"></canvas>
+</section>
+<div id="tip" class="panel"></div>
+<div id="toast" class="panel"></div>
+
+<div id="lb" class="modal"><div class="card">
+  <img id="lbImg" alt="">
+  <div class="txt">
+    <div class="lab" id="lbLab">Ground truth</div>
+    <h3 id="lbTitle"></h3>
+    <div id="lbBody" style="color:#c9cdd1"></div>
+    <div class="nav"><button class="tb" id="lbPrev">Previous</button><button class="tb" id="lbNext">Next image</button><button class="tb" id="lbClose">Close</button></div>
+  </div>
+</div></div>
+
+<div id="about" class="modal"><div class="box panel" style="background:rgba(8,9,11,.97)">
+  <h2>Data sources</h2>
+  <ul>
+    <li><b>Crater terrain:</b> CTX stereo elevation model of Jezero, 20 m/px, made for Mars 2020 Terrain-Relative Navigation (<i>JEZ_ctx_B_soc_008_DTM</i>, USGS Astrogeology / NASA-JPL), resampled to 60 m. Routes are planned on this.</li>
+    <li><b>Crater imagery:</b> CTX orthomosaic, 6 m/px (USGS / NASA-JPL / MSSS). Grayscale source with a display tint.</li>
+    <li><b>Surrounding 240 km:</b> Mars HRSC-MOLA Blended DEM v2, 200 m/px (NASA MGS MOLA + ESA Mars Express HRSC; USGS Astrogeology) and the Viking MDIM2.1 mosaic via NASA Mars Trek. Mars curvature is applied beyond the crater zone.</li>
+    <li><b>Rover traverse:</b> Perseverance drive path and end-of-drive localizations, sols 0–2022, NASA/JPL-Caltech Mars 2020 MMGIS.</li>
+    <li><b>Space weather:</b> NASA CCMC DONKI (<a href="https://ccmc.gsfc.nasa.gov/DONKI/" target="_blank">ccmc.gsfc.nasa.gov/DONKI</a>): CMEs whose WSA-ENLIL model runs predicted a Mars impact, Jan 2024 – Nov 2026. Live refresh through api.nasa.gov.</li>
+    <li><b>Rover images:</b> Perseverance raw images, sols 0–4, NASA/JPL-Caltech.</li>
+    <li><b>3D models:</b> Astronaut and Mars 2020 Perseverance rover from NASA 3D Resources (github.com/nasa/NASA-3D-Resources), shown at true scale (1.85 m astronaut, 2.2 m rover). Zoom in to see how small they are against the 60 m terrain grid. The rover's driven tracks mark ground proven traversable, and each plan reports how much of the walk follows them.</li>
+    <li><b>Mars time:</b> Mars24 (Allison &amp; McEwen 2000, NASA GISS). <b>Radiation baseline:</b> MSL RAD, about 0.64 mSv/day (Hassler et al. 2014).</li>
+  </ul>
+  <h2>Method</h2>
+  <ul>
+    <li><b>Sense:</b> slope from the elevation model; ground steeper than the limit is no-go.</li>
+    <li><b>Decide:</b> A* search for the lowest-energy path using Minetti et al. (2002) walking cost against gradient; outbound and return planned separately.</li>
+    <li><b>Act:</b> go / caution / no-go. The walk plus science time must fit the suit limit with a 20% reserve, the crew must be rested, and if a storm arrives mid-walk the crew must reach shelter in time.</li>
+    <li><b>Baseline:</b> every route is compared with the straight line (dashed).</li>
+  </ul>
+  <h2>Limits</h2>
+  <ul>
+    <li>A 60 m grid can't see boulders; a real traverse needs HiRISE 1 m terrain.</li>
+    <li>Walking speed (Tobler × 0.7 for the suit) and energy are Earth-derived planning estimates.</li>
+    <li>CME arrival times are uncertain by hours, so alerts are conservative. The crew check is a screening flag, not a medical assessment.</li>
+  </ul>
+  <h2>AI disclosure</h2>
+  <ul><li>Code written with help from an AI coding assistant and reviewed by the team. No AI-generated images or data are used.</li></ul>
+  <div style="margin-top:16px"><button class="tb" id="closeAbout">Close</button></div>
+</div></div>
+
+<script type="module" src="app.js?v=46"></script>
+</body>
+</html>

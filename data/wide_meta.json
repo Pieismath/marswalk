@@ -1,0 +1,13 @@
+{
+ "width": 622,
+ "height": 593,
+ "lat_top": 20.452621438827705,
+ "lon_left": 75.34671622124961,
+ "deg_per_px": 0.006748241661282,
+ "source": "Mars HRSC-MOLA Blended DEM Global 200m v2 (NASA/ESA/DLR/FU Berlin; USGS Astrogeology), decimated to ~400 m; color: Viking MDIM2.1 color mosaic via NASA Mars Trek",
+ "inner_mean_rgb": [
+  79,
+  68,
+  76
+ ]
+}
