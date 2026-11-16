@@ -1,4 +1,6 @@
-video/raw.mp4
+video/raw*.mp4
 video/*.jpg
 video/vo.aiff
 video/endcard.png
+video/cap*.png
+video/step*.png

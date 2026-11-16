@@ -779,10 +779,11 @@ $('loading').remove();
 { const q = new URLSearchParams(location.search);
   if (q.has('still')) controls.autoRotate = false;
   if (q.has('clean')) document.body.classList.add('clean');
+  if (q.has('video')) document.body.classList.add('video');
   if (q.has('elev')) { LAYERS.elev = true; applyLayers(); }
   if (q.has('demo')) { S.target = { ...DELTA_DEMO }; plan(); controls.autoRotate = false;
     const m = toWorld(...midCell()); camera.position.copy(m.clone().add(new THREE.Vector3(60, 95, 120))); controls.target.copy(m); }
   if (q.has('storm')) $('runStorm').click();
   if (q.has('rover')) { controls.autoRotate = false; const p = rover3d.position.clone(); controls.target.copy(p).add(new THREE.Vector3(0, .6, 0)); camera.position.copy(p).add(new THREE.Vector3(0.06, 0.03, 0.08)); controls.target.copy(p).add(new THREE.Vector3(0, 0.01, 0)); }
   if (q.has('astro')) { const p = astro.position.clone(); controls.target.copy(p).add(new THREE.Vector3(0, .009, 0)); camera.position.copy(p).add(new THREE.Vector3(0.05, 0.025, 0.07)); } }
-window.__S = S; window.__api = { camera, controls, astro, rover3d, astar, pathStats, straightLineCheck, cellOf, cr2ll, ll2cr, plan }; // debug
+window.__S = S; window.__api = { toWorld, cellOf, DELTA_DEMO, camera, controls, astro, rover3d, astar, pathStats, straightLineCheck, cellOf, cr2ll, ll2cr, plan }; // debug
